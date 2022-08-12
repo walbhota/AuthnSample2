@@ -26,11 +26,19 @@ namespace Authn.Controllers
         {
             return View();
         }
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public IActionResult Secured()
         {
             return View();
         }
+
+        [HttpGet("denied")]
+        public IActionResult Denied()
+        {
+            return View();
+        }
+
+
         [HttpGet("login")]
         public IActionResult Login(string returnUrl)
         {
@@ -46,6 +54,7 @@ namespace Authn.Controllers
                 var claims = new List<Claim>();
                 claims.Add(new Claim("username", username));
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, username));
+                claims.Add(new Claim(ClaimTypes.Name, "Ebhota Walter Eromosele"));
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
                 await HttpContext.SignInAsync(claimsPrincipal);
@@ -55,6 +64,8 @@ namespace Authn.Controllers
             TempData["Error"] = "Error: Username or Password is invalid";
             return View("login");
         }
+
+
 
         [Authorize]
         public async Task<IActionResult> Logout()
