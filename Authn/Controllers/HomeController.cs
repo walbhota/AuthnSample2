@@ -40,6 +40,7 @@ namespace Authn.Controllers
         [HttpPost("login")] 
         public async Task<IActionResult> Validate(string username, string password, string returnUrl)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             if(username == "walter" && password == "bigman")
             {
                 var claims = new List<Claim>();
@@ -50,7 +51,9 @@ namespace Authn.Controllers
                 await HttpContext.SignInAsync(claimsPrincipal);
                 return Redirect(returnUrl);
             }
-            return BadRequest();
+
+            TempData["Error"] = "Error: Username or Password is invalid";
+            return View("login");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
