@@ -26,7 +26,7 @@ namespace Authn.Controllers
         {
             return View();
         }
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public IActionResult Secured()
         {
             return View();
@@ -60,6 +60,17 @@ namespace Authn.Controllers
                 await HttpContext.SignInAsync(claimsPrincipal);
                 return Redirect(returnUrl);
             }
+            if (username == "james" && password == "roman")
+            {
+                var claims = new List<Claim>();
+                claims.Add(new Claim("username", username));
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, username));
+                claims.Add(new Claim(ClaimTypes.Name, "James rodriguez roman"));
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                await HttpContext.SignInAsync(claimsPrincipal);
+                return Redirect(returnUrl);
+            }
 
             TempData["Error"] = "Error: Username or Password is invalid";
             return View("login");
@@ -71,7 +82,7 @@ namespace Authn.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();
-            return Redirect("/");
+            return Redirect(@"https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://localhost:7171");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,38 +7,28 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    })
     .AddCookie(
     options =>
     {
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/denied";
-        options.Events = new CookieAuthenticationEvents()
-        {
-             OnSigningIn = async context =>
-             {
-                 var principal = context.Principal;
-                 if(principal.HasClaim(c => c.Type == ClaimTypes.NameIdentifier))
-                 {
-                     if(principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value == "walter")
-                     {
-                         var claimsIdentity = principal.Identity as ClaimsIdentity;
-                         claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, "Admin"));
-                     }
-                 }
-                 await Task.CompletedTask;
-             },
-             OnSignedIn = async context =>
-             {
-                 await Task.CompletedTask;
-             },
-             OnValidatePrincipal = async context =>
-             {
-                 await Task.CompletedTask;
-             }
-        };
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = "435073184014-3059uis6u3511jecqsp5atvne5k523n3.apps.googleusercontent.com";
+        options.ClientSecret = "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";
+        options.CallbackPath = "/auth";
+        //Prompt to consent, to select from list of account after logout, when trying to log back in has been taking cared of in latest .Net
+        //So the AuthorizationEndpoint is not necessary needed, but take note when dealing with other versions.
+        options.AuthorizationEndpoint += "?prompt=consent";
     }
     );
+
 
 var app = builder.Build();
 
