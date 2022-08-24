@@ -24,7 +24,7 @@ builder.Services.AddAuthentication(options =>
         options.ClientId = "435073184014-3059uis6u3511jecqsp5atvne5k523n3.apps.googleusercontent.com";
         options.ClientSecret = "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";
         options.CallbackPath = "/auth";
-        
+        options.SaveTokens = true;
     });
     //.AddGoogle(options =>
     //{
