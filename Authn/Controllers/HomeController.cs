@@ -26,7 +26,7 @@ namespace Authn.Controllers
         {
             return View();
         }
-        [Authorize]
+        [Authorize(Roles ="Admin")]
         public async Task<IActionResult> Secured()
         {
             var idToken = await HttpContext.GetTokenAsync("id_token");

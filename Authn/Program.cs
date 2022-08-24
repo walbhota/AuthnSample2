@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,19 @@ builder.Services.AddAuthentication(options =>
         options.ClientSecret = "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";
         options.CallbackPath = "/auth";
         options.SaveTokens = true;
+        options.Events = new OpenIdConnectEvents()
+        {
+            OnTokenValidated = async context =>
+            {
+                if(context.Principal.Claims.FirstOrDefault(c=>c.Type==ClaimTypes.NameIdentifier).Value== "101977722387594596976")
+                {
+                    var claim = new Claim(ClaimTypes.Role, "Admin");
+                    var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
+                    claimsIdentity.AddClaim(claim);
+                }
+                var claims = context.Principal.Claims;
+            }
+        };
     });
     //.AddGoogle(options =>
     //{
