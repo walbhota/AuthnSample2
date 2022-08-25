@@ -11,7 +11,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = "GoogleOpenID";
+        options.DefaultChallengeScheme = "okta";
     })
     .AddCookie(
     options =>
@@ -19,7 +19,7 @@ builder.Services.AddAuthentication(options =>
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/denied";
     })
-    .AddOpenIdConnect("GoogleOpenID", options =>
+    .AddOpenIdConnect("google", options =>
     {
         options.Authority = "https://accounts.google.com";
         options.ClientId = "435073184014-3059uis6u3511jecqsp5atvne5k523n3.apps.googleusercontent.com";
@@ -30,7 +30,7 @@ builder.Services.AddAuthentication(options =>
         {
             OnTokenValidated = async context =>
             {
-                if(context.Principal.Claims.FirstOrDefault(c=>c.Type==ClaimTypes.NameIdentifier).Value== "101977722387594596976")
+                if (context.Principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value == "101977722387594596976")
                 {
                     var claim = new Claim(ClaimTypes.Role, "Admin");
                     var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
@@ -39,6 +39,16 @@ builder.Services.AddAuthentication(options =>
                 var claims = context.Principal.Claims;
             }
         };
+    }).AddOpenIdConnect("okta", options =>
+    {
+        options.Authority = "https://dev-29932433.okta.com/oauth2/default";
+        options.ClientId = "0oa6a4kkrx9A86Eb25d7";
+        options.ClientSecret = "Qrwxuhz24BtL5luFbt5wPWz-gGcKvQvayeZXXuqb";
+        options.CallbackPath = "/authorization-code/callback";
+        options.ResponseType = "code";
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.SaveTokens = true;
     });
     //.AddGoogle(options =>
     //{
