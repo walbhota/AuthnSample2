@@ -46,6 +46,25 @@ namespace Authn.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
+
+        [HttpGet("login/{provider}")]
+        public IActionResult LoginExternal([FromRoute]string provider, [FromQuery]string returnUrl)
+        {
+            if(User != null && User.Identities.Any(identity => identity.IsAuthenticated))
+            {
+                RedirectToAction("", "Home");
+            }
+
+            //By default the client will be redirected back to the URL that issued the challenge(/login?authtype=foo)
+            //Send them to the home page instead(/).
+
+            returnUrl = string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl;
+            var authenticationProperties = new AuthenticationProperties { RedirectUri = returnUrl };
+            
+            //authenticationProperties.Setparameter("prompt", "select_account");
+
+            return new ChallengeResult(provider, authenticationProperties);
+        }
         [HttpPost("login")] 
         public async Task<IActionResult> Validate(string username, string password, string returnUrl)
         {
