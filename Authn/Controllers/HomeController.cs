@@ -77,7 +77,10 @@ namespace Authn.Controllers
                 claims.Add(new Claim(ClaimTypes.Name, "Ebhota Walter Eromosele"));
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                await HttpContext.SignInAsync(claimsPrincipal);
+                var items = new Dictionary<string, string>();
+                items.Add(".AuthScheme", CookieAuthenticationDefaults.AuthenticationScheme);
+                var properties = new AuthenticationProperties(items);
+                await HttpContext.SignInAsync(claimsPrincipal, properties);
                 return Redirect(returnUrl);
             }
             if (username == "james" && password == "roman")
@@ -101,8 +104,17 @@ namespace Authn.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync();
-            return Redirect(@"https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://localhost:7171");
+            var scheme = User.Claims.FirstOrDefault(c => c.Type == ".AuthScheme").Value;
+            if(scheme == "google")
+            {
+                await HttpContext.SignOutAsync();
+                return Redirect(@"https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://localhost:7171");
+            }
+            else
+            {
+                return new SignOutResult(new[] { CookieAuthenticationDefaults.AuthenticationScheme, scheme });
+            }
+            
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

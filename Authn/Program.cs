@@ -18,6 +18,16 @@ builder.Services.AddAuthentication(options =>
     {
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/denied";
+        options.Events = new CookieAuthenticationEvents()
+        {
+            OnSigningIn = async context =>
+            {
+                var scheme = context.Properties.Items.Where(k => k.Key == ".AuthScheme").FirstOrDefault();
+                var claim = new Claim(scheme.Key, scheme.Value);
+                var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
+                claimsIdentity.AddClaim(claim);
+            }
+        };
     })
     .AddOpenIdConnect("google", options =>
     {
@@ -45,9 +55,11 @@ builder.Services.AddAuthentication(options =>
         options.ClientId = "0oa6a4kkrx9A86Eb25d7";
         options.ClientSecret = "Qrwxuhz24BtL5luFbt5wPWz-gGcKvQvayeZXXuqb";
         options.CallbackPath = "/authorization-code/callback";
+        options.SignedOutCallbackPath = "/Account/PostLogout";
         options.ResponseType = "code";
         options.Scope.Add("openid");
         options.Scope.Add("profile");
+        options.Scope.Add("offline_access");
         options.SaveTokens = true;
     });
     //.AddGoogle(options =>
