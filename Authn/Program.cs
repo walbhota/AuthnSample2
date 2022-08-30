@@ -1,4 +1,5 @@
 using Authn.Data;
+using Authn.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddDbContext<AuthDbContext>(options => 
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
@@ -20,8 +22,7 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     })
-    .AddCookie(
-    options =>
+    .AddCookie(options =>
     {
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/denied";
@@ -32,7 +33,22 @@ builder.Services.AddAuthentication(options =>
                 var scheme = context.Properties.Items.Where(k => k.Key == ".AuthScheme").FirstOrDefault();
                 var claim = new Claim(scheme.Key, scheme.Value);
                 var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
+                var userService = context.HttpContext.RequestServices.GetRequiredService(typeof(UserService)) as UserService;
+                var nameIdentifier = claimsIdentity.Claims.FirstOrDefault(m => m.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (userService != null && nameIdentifier != null)
+                {
+                    var appUser = userService.GetUserByExternalProvider(scheme.Value, nameIdentifier);
+                    if (appUser is null)
+                    {
+                        appUser = userService.AddNewUser(scheme.Value, claimsIdentity.Claims.ToList());
+                    }
+                    foreach (var r in appUser.RoleList)
+                    {
+                        claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, r));
+                    }
+                }
                 claimsIdentity.AddClaim(claim);
+                await Task.CompletedTask;
             }
         };
     })
@@ -43,19 +59,7 @@ builder.Services.AddAuthentication(options =>
         options.ClientSecret = "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";
         options.CallbackPath = "/auth";
         options.SaveTokens = true;
-        options.Events = new OpenIdConnectEvents()
-        {
-            OnTokenValidated = async context =>
-            {
-                if (context.Principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value == "101977722387594596976")
-                {
-                    var claim = new Claim(ClaimTypes.Role, "Admin");
-                    var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
-                    claimsIdentity.AddClaim(claim);
-                }
-                var claims = context.Principal.Claims;
-            }
-        };
+        
     }).AddOpenIdConnect("okta", options =>
     {
         options.Authority = "https://dev-29932433.okta.com/oauth2/default";

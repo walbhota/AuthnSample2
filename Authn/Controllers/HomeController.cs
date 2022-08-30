@@ -1,4 +1,5 @@
 ﻿using Authn.Models;
+using Authn.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +12,12 @@ namespace Authn.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly UserService _userService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, UserService userService)
         {
             _logger = logger;
+            _userService = userService;
         }
 
         public IActionResult Index()
@@ -26,95 +29,28 @@ namespace Authn.Controllers
         {
             return View();
         }
-        [Authorize(Roles ="Admin")]
-        public async Task<IActionResult> Secured()
-        {
-            var idToken = await HttpContext.GetTokenAsync("id_token");
-            return View();
-        }
+
 
         [HttpGet("denied")]
         public IActionResult Denied()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                var role = User.Claims.FirstOrDefault(m => m.Type == ClaimTypes.Role)?.Value;
+                if (role == "NewUser") // we have a new user, let's take them to a new user welcome page    
+                {
+                    return Redirect("/newuser");
+                }
+            }
             return View();
         }
 
-
-        [HttpGet("login")]
-        public IActionResult Login(string returnUrl)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Secured()
         {
-            ViewData["ReturnUrl"] = returnUrl;
+            await Task.CompletedTask;
+            //var idToken = await HttpContext.GetTokenAsync("id_token");
             return View();
-        }
-
-        [HttpGet("login/{provider}")]
-        public IActionResult LoginExternal([FromRoute]string provider, [FromQuery]string returnUrl)
-        {
-            if(User != null && User.Identities.Any(identity => identity.IsAuthenticated))
-            {
-                RedirectToAction("", "Home");
-            }
-
-            //By default the client will be redirected back to the URL that issued the challenge(/login?authtype=foo)
-            //Send them to the home page instead(/).
-
-            returnUrl = string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl;
-            var authenticationProperties = new AuthenticationProperties { RedirectUri = returnUrl };
-            
-            //authenticationProperties.Setparameter("prompt", "select_account");
-
-            return new ChallengeResult(provider, authenticationProperties);
-        }
-        [HttpPost("login")] 
-        public async Task<IActionResult> Validate(string username, string password, string returnUrl)
-        {
-            ViewData["ReturnUrl"] = returnUrl;
-            if(username == "walter" && password == "bigman")
-            {
-                var claims = new List<Claim>();
-                claims.Add(new Claim("username", username));
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, username));
-                claims.Add(new Claim(ClaimTypes.Name, "Ebhota Walter Eromosele"));
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                var items = new Dictionary<string, string>();
-                items.Add(".AuthScheme", CookieAuthenticationDefaults.AuthenticationScheme);
-                var properties = new AuthenticationProperties(items);
-                await HttpContext.SignInAsync(claimsPrincipal, properties);
-                return Redirect(returnUrl);
-            }
-            if (username == "james" && password == "roman")
-            {
-                var claims = new List<Claim>();
-                claims.Add(new Claim("username", username));
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, username));
-                claims.Add(new Claim(ClaimTypes.Name, "James rodriguez roman"));
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                await HttpContext.SignInAsync(claimsPrincipal);
-                return Redirect(returnUrl);
-            }
-
-            TempData["Error"] = "Error: Username or Password is invalid";
-            return View("login");
-        }
-
-
-
-        [Authorize]
-        public async Task<IActionResult> Logout()
-        {
-            var scheme = User.Claims.FirstOrDefault(c => c.Type == ".AuthScheme").Value;
-            if(scheme == "google")
-            {
-                await HttpContext.SignOutAsync();
-                return Redirect(@"https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=https://localhost:7171");
-            }
-            else
-            {
-                return new SignOutResult(new[] { CookieAuthenticationDefaults.AuthenticationScheme, scheme });
-            }
-            
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
