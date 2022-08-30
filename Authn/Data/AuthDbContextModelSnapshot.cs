@@ -23,47 +23,38 @@ namespace Authn.Data
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Firstname")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Lastname")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Mobile")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NameIdentifier")
-                        .IsRequired()
-                        .HasMaxLength(250)
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Provider")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Roles")
-                        .IsRequired()
-                        .HasMaxLength(250)
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("TEXT");
 
@@ -75,15 +66,14 @@ namespace Authn.Data
                         new
                         {
                             UserId = 1,
-                            Email = "walbhota@gmail.com",
-                            Firstname = "Walter",
-                            Lastname = "Ebhota",
-                            Mobile = "08113867034",
-                            NameIdentifier = "",
-                            Password = "bigman",
+                            Email = "bob@admonex.com",
+                            Firstname = "Bob",
+                            Lastname = "Tester",
+                            Mobile = "800-555-1212",
+                            Password = "pizza",
                             Provider = "Cookies",
                             Roles = "Admin",
-                            Username = "walbhota@gmail.com"
+                            Username = "bob"
                         });
                 });
 #pragma warning restore 612, 618
