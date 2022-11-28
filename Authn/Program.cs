@@ -55,16 +55,16 @@ builder.Services.AddAuthentication(options =>
     .AddOpenIdConnect("google", options =>
     {
         options.Authority = "https://accounts.google.com";
-        options.ClientId = "435073184014-3059uis6u3511jecqsp5atvne5k523n3.apps.googleusercontent.com";
-        options.ClientSecret = "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";
+        options.ClientId ="Id from google dev"
+        options.ClientSecret = "secret from google dev"
         options.CallbackPath = "/auth";
         options.SaveTokens = true;
         
     }).AddOpenIdConnect("okta", options =>
     {
         options.Authority = "https://dev-29932433.okta.com/oauth2/default";
-        options.ClientId = "0oa6a4kkrx9A86Eb25d7";
-        options.ClientSecret = "Qrwxuhz24BtL5luFbt5wPWz-gGcKvQvayeZXXuqb";
+        options.ClientId = "Id from okta dev"
+        options.ClientSecret = "secret from okta dev"
         options.CallbackPath = "/authorization-code/callback";
         options.SignedOutCallbackPath = "/Account/PostLogout";
         options.ResponseType = "code";
